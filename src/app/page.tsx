@@ -14,10 +14,13 @@ interface Message {
   timestamp: Date;
 }
 
+const WELCOME_MESSAGE = "Hello! I'm here to answer any questions you have about my experience, skills, and background. Feel free to ask me anything related to my qualifications for the role you're hiring for. How can I help you today?";
+
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [inputText, setInputText] = useState("");
+  const [hasGreeted, setHasGreeted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { speak, isSpeaking, cancel: cancelSpeech } = useSpeechSynthesis();
@@ -29,6 +32,27 @@ export default function Home() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Show welcome message on first load
+  useEffect(() => {
+    if (!hasGreeted) {
+      const welcomeMsg: Message = {
+        id: 'welcome',
+        text: WELCOME_MESSAGE,
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages([welcomeMsg]);
+      setHasGreeted(true);
+      
+      // Auto-speak the welcome message after a short delay
+      const timer = setTimeout(() => {
+        speak(WELCOME_MESSAGE);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [hasGreeted, speak]);
 
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -119,20 +143,6 @@ export default function Home() {
 
       {/* Chat Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 dark:text-gray-400">
-            <div className="text-6xl mb-4">👋</div>
-            <h2 className="text-xl font-semibold mb-2">
-              Hi, I&apos;m here to answer your questions!
-            </h2>
-            <p className="max-w-md">
-              {isSupported
-                ? "Ask me anything about my experience, skills, or background. Type a message or use the microphone."
-                : "Ask me anything about my experience, skills, or background. Type your question below."}
-            </p>
-          </div>
-        )}
-
         {messages.map((message) => (
           <ChatBubble
             key={message.id}
