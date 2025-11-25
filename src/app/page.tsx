@@ -14,7 +14,8 @@ interface Message {
   timestamp: Date;
 }
 
-const WELCOME_MESSAGE = "Hello! I'm here to answer any questions you have about my experience, skills, and background. Feel free to ask me anything related to my qualifications for the role you're hiring for. How can I help you today?";
+const WELCOME_MESSAGE =
+  "Hello! I'm here to answer any questions you have about my experience, skills, and background. Feel free to ask me anything related to my qualifications for the role you're hiring for. How can I help you today?";
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -37,19 +38,19 @@ export default function Home() {
   useEffect(() => {
     if (!hasGreeted) {
       const welcomeMsg: Message = {
-        id: 'welcome',
+        id: "welcome",
         text: WELCOME_MESSAGE,
         isUser: false,
         timestamp: new Date(),
       };
       setMessages([welcomeMsg]);
       setHasGreeted(true);
-      
+
       // Auto-speak the welcome message after a short delay
       const timer = setTimeout(() => {
         speak(WELCOME_MESSAGE);
       }, 500);
-      
+
       return () => clearTimeout(timer);
     }
   }, [hasGreeted, speak]);

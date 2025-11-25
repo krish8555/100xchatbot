@@ -302,9 +302,11 @@ Why I'm interested in this role: [Your motivation]...
             ⚠️ Vercel Deployment Note
           </h3>
           <p className="text-sm text-amber-700 dark:text-amber-300">
-            On Vercel, settings saved here are temporary and will reset on cold starts. 
-            For permanent settings, configure <strong>GEMINI_API_KEY</strong>, <strong>KNOWLEDGE_BASE</strong>, 
-            and <strong>ADMIN_PASSWORD</strong> as environment variables in your Vercel project dashboard.
+            On Vercel, settings saved here are temporary and will reset on cold
+            starts. For permanent settings, configure{" "}
+            <strong>GEMINI_API_KEY</strong>, <strong>KNOWLEDGE_BASE</strong>,
+            and <strong>ADMIN_PASSWORD</strong> as environment variables in your
+            Vercel project dashboard.
           </p>
         </div>
       </div>
