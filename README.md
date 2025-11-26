@@ -6,7 +6,7 @@ A voice-enabled personality chatbot built with Next.js 14 that responds exactly 
 
 - **Voice Input/Output**: Big microphone button with smooth pulse animation
 - **Speech-to-Text**: Converts your voice to text using Web Speech API
-- **Text-to-Speech**: Bot responses are spoken aloud
+- **Text-to-Speech**: Bot responses are spoken aloud using Google Cloud TTS (male voice)
 - **Chat History**: All conversations displayed in beautiful chat bubbles
 - **Dark Mode**: Toggle between light and dark themes
 - **Admin Panel**: Password-protected settings page
@@ -36,6 +36,10 @@ ADMIN_PASSWORD=your-secure-password-here
 
 # Optional: Set a default Gemini API key (can also be set via admin panel)
 GEMINI_API_KEY=your-gemini-api-key
+
+# Optional: Set Google Cloud API key for high-quality male voice output
+# If not set, falls back to browser's Web Speech API
+GOOGLE_CLOUD_API_KEY=your-google-cloud-api-key
 ```
 
 ### 3. Run the Development Server
