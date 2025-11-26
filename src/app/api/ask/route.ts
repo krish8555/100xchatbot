@@ -4,11 +4,31 @@ import { getSettings } from "@/lib/settings";
 
 export async function POST(request: NextRequest) {
   try {
-    const { message } = await request.json();
+    const contentType = request.headers.get("content-type") || "";
+    
+    let message: string = "";
+    let audioData: string | null = null;
+    let audioMimeType: string | null = null;
 
-    if (!message) {
+    // Check if it's a multipart form (audio) or JSON (text)
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await request.formData();
+      const audioFile = formData.get("audio") as File | null;
+      message = formData.get("message") as string || "";
+      
+      if (audioFile) {
+        const arrayBuffer = await audioFile.arrayBuffer();
+        audioData = Buffer.from(arrayBuffer).toString("base64");
+        audioMimeType = audioFile.type || "audio/webm";
+      }
+    } else {
+      const json = await request.json();
+      message = json.message;
+    }
+
+    if (!message && !audioData) {
       return NextResponse.json(
-        { error: "Message is required" },
+        { error: "Message or audio is required" },
         { status: 400 }
       );
     }
@@ -61,6 +81,25 @@ STRICT RULES:
 - Highlight relevant skills, experiences, and achievements when appropriate.
 - Be honest and authentic in your responses.`;
 
+    // Build the message parts
+    const messageParts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
+    
+    // Add audio if present
+    if (audioData && audioMimeType) {
+      messageParts.push({
+        inlineData: {
+          mimeType: audioMimeType,
+          data: audioData,
+        },
+      });
+      // Add instruction to process the audio
+      messageParts.push({
+        text: message || "Please listen to this audio and respond to what was said.",
+      });
+    } else {
+      messageParts.push({ text: message });
+    }
+
     // Create the chat
     const chat = model.startChat({
       history: [
@@ -79,8 +118,8 @@ STRICT RULES:
       ],
     });
 
-    // Send the message
-    const result = await chat.sendMessage(message);
+    // Send the message (with audio if present)
+    const result = await chat.sendMessage(messageParts);
     const response = result.response.text();
 
     return NextResponse.json({ response });
