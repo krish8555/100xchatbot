@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 
+// Camb.AI API Configuration
 const CAMB_AI_API_BASE_URL = "https://client.camb.ai/apis";
 const POLLING_INTERVAL_MS = 2000;
 const MAX_POLLING_ATTEMPTS = 30; // 60 seconds max wait time
+
+// Voice and Language Configuration
+const DEFAULT_VOICE_ID = 20037; // English male voice
+const LANGUAGE_ENGLISH = 1;
+const GENDER_MALE = 1;
+
+// Task Status Constants
+const STATUS_SUCCESS = "SUCCESS";
+const STATUS_FAILED = "FAILED";
+const STATUS_ERROR = "ERROR";
 
 // Camb.AI API response types
 interface TaskResponse {
@@ -40,9 +51,9 @@ export async function POST(request: NextRequest) {
     // Step 1: Create TTS task
     const ttsPayload = {
       text,
-      voice_id: 20037, // Default English male voice
-      language: 1, // English
-      gender: 1, // Male
+      voice_id: DEFAULT_VOICE_ID,
+      language: LANGUAGE_ENGLISH,
+      gender: GENDER_MALE,
     };
 
     const createResponse = await fetch(`${CAMB_AI_API_BASE_URL}/tts`, {
@@ -71,8 +82,6 @@ export async function POST(request: NextRequest) {
     let attempts = 0;
 
     while (attempts < MAX_POLLING_ATTEMPTS) {
-      await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL_MS));
-
       const statusResponse = await fetch(
         `${CAMB_AI_API_BASE_URL}/tts/${taskId}`,
         {
@@ -85,17 +94,18 @@ export async function POST(request: NextRequest) {
 
       if (!statusResponse.ok) {
         attempts++;
+        await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL_MS));
         continue;
       }
 
       const statusData: StatusResponse = await statusResponse.json();
 
-      if (statusData.status === "SUCCESS" && statusData.run_id) {
+      if (statusData.status === STATUS_SUCCESS && statusData.run_id) {
         runId = statusData.run_id;
         break;
       }
 
-      if (statusData.status === "FAILED" || statusData.status === "ERROR") {
+      if (statusData.status === STATUS_FAILED || statusData.status === STATUS_ERROR) {
         return NextResponse.json(
           { error: "TTS task failed" },
           { status: 500 }
@@ -103,6 +113,7 @@ export async function POST(request: NextRequest) {
       }
 
       attempts++;
+      await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL_MS));
     }
 
     if (!runId) {
