@@ -1,5 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { TextToSpeechClient } from "@google-cloud/text-to-speech";
+
+const CAMB_AI_API_BASE_URL = "https://client.camb.ai/apis";
+const POLLING_INTERVAL_MS = 2000;
+const MAX_POLLING_ATTEMPTS = 30; // 60 seconds max wait time
+
+// Camb.AI API response types
+interface TaskResponse {
+  task_id: string;
+}
+
+interface StatusResponse {
+  status: string;
+  run_id?: number;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,56 +25,121 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the Google Cloud API key from environment
-    const apiKey = process.env.GOOGLE_CLOUD_API_KEY;
+    // Get the Camb.AI API key from environment
+    const apiKey = process.env.CAMB_AI_API_KEY;
 
     if (!apiKey) {
       return NextResponse.json(
         {
-          error: "Google Cloud API key is not configured. Please set GOOGLE_CLOUD_API_KEY in environment variables.",
+          error: "Camb.AI API key is not configured. Please set CAMB_AI_API_KEY in environment variables.",
         },
         { status: 500 }
       );
     }
 
-    // Initialize the client with API key
-    const client = new TextToSpeechClient({
-      apiKey,
-    });
-
-    // Build the text-to-speech request
-    const ttsRequest = {
-      input: { text },
-      // Select a male voice (en-US-Wavenet-D is a male voice)
-      voice: {
-        languageCode: "en-US",
-        name: "en-US-Wavenet-D", // Male voice
-        ssmlGender: "MALE" as const,
-      },
-      // Select the type of audio encoding
-      audioConfig: {
-        audioEncoding: "MP3" as const,
-        speakingRate: 1.0,
-        pitch: 0,
-      },
+    // Step 1: Create TTS task
+    const ttsPayload = {
+      text,
+      voice_id: 20037, // Default English male voice
+      language: 1, // English
+      gender: 1, // Male
     };
 
-    // Perform the text-to-speech request
-    const [response] = await client.synthesizeSpeech(ttsRequest);
+    const createResponse = await fetch(`${CAMB_AI_API_BASE_URL}/tts`, {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(ttsPayload),
+    });
 
-    if (!response.audioContent) {
+    if (!createResponse.ok) {
+      const errorText = await createResponse.text();
+      console.error("Camb.AI TTS create error:", errorText);
       return NextResponse.json(
-        { error: "Failed to synthesize speech" },
+        { error: "Failed to create TTS task" },
         { status: 500 }
       );
     }
 
-    // Convert the audio content to base64
-    const audioBase64 = Buffer.from(response.audioContent).toString("base64");
+    const taskData: TaskResponse = await createResponse.json();
+    const taskId = taskData.task_id;
 
+    // Step 2: Poll for completion
+    let runId: number | null = null;
+    let attempts = 0;
+
+    while (attempts < MAX_POLLING_ATTEMPTS) {
+      await new Promise((resolve) => setTimeout(resolve, POLLING_INTERVAL_MS));
+
+      const statusResponse = await fetch(
+        `${CAMB_AI_API_BASE_URL}/tts/${taskId}`,
+        {
+          method: "GET",
+          headers: {
+            "x-api-key": apiKey,
+          },
+        }
+      );
+
+      if (!statusResponse.ok) {
+        attempts++;
+        continue;
+      }
+
+      const statusData: StatusResponse = await statusResponse.json();
+
+      if (statusData.status === "SUCCESS" && statusData.run_id) {
+        runId = statusData.run_id;
+        break;
+      }
+
+      if (statusData.status === "FAILED" || statusData.status === "ERROR") {
+        return NextResponse.json(
+          { error: "TTS task failed" },
+          { status: 500 }
+        );
+      }
+
+      attempts++;
+    }
+
+    if (!runId) {
+      return NextResponse.json(
+        { error: "TTS task timed out" },
+        { status: 500 }
+      );
+    }
+
+    // Step 3: Get the audio result
+    const audioResponse = await fetch(
+      `${CAMB_AI_API_BASE_URL}/tts-result/${runId}`,
+      {
+        method: "GET",
+        headers: {
+          "x-api-key": apiKey,
+        },
+      }
+    );
+
+    if (!audioResponse.ok) {
+      const errorText = await audioResponse.text();
+      console.error("Camb.AI TTS result error:", errorText);
+      return NextResponse.json(
+        { error: "Failed to retrieve TTS result" },
+        { status: 500 }
+      );
+    }
+
+    // Get the audio as a buffer
+    const audioBuffer = await audioResponse.arrayBuffer();
+    const audioBase64 = Buffer.from(audioBuffer).toString("base64");
+
+    // Camb.AI returns audio in WAV format by default
     return NextResponse.json({
       audioContent: audioBase64,
-      contentType: "audio/mp3",
+      contentType: "audio/wav",
     });
   } catch (error) {
     console.error("Error in /api/tts:", error);
