@@ -26,12 +26,12 @@ export async function POST(request: NextRequest) {
 
     // Initialize the client with API key
     const client = new TextToSpeechClient({
-      apiKey: apiKey,
+      apiKey,
     });
 
     // Build the text-to-speech request
     const ttsRequest = {
-      input: { text: text },
+      input: { text },
       // Select a male voice (en-US-Wavenet-D is a male voice)
       voice: {
         languageCode: "en-US",
