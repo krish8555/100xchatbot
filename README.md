@@ -10,7 +10,7 @@ A voice-enabled personality chatbot built with Next.js 14 that responds exactly 
 - **Chat History**: All conversations displayed in beautiful chat bubbles
 - **Dark Mode**: Toggle between light and dark themes
 - **Admin Panel**: Password-protected settings page
-- **Gemini AI**: Powered by Google's Gemini 1.5 Flash model
+- **Gemini AI**: Powered by Google's Gemini 2.0 Flash model
 
 ## 🚀 Quick Start
 
@@ -161,7 +161,7 @@ theme: {
 
 - **Framework**: Next.js 14 (App Router)
 - **Styling**: Tailwind CSS
-- **AI**: Google Gemini 1.5 Flash
+- **AI**: Google Gemini 2.0 Flash
 - **Speech**: Web Speech API
 - **Language**: TypeScript
 
