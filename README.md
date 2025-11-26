@@ -6,7 +6,7 @@ A voice-enabled personality chatbot built with Next.js 14 that responds exactly 
 
 - **Voice Input/Output**: Big microphone button with smooth pulse animation
 - **Speech-to-Text**: Converts your voice to text using Web Speech API
-- **Text-to-Speech**: Bot responses are spoken aloud using Google Cloud TTS (male voice)
+- **Text-to-Speech**: Bot responses are spoken aloud using Camb.AI TTS (male voice)
 - **Chat History**: All conversations displayed in beautiful chat bubbles
 - **Dark Mode**: Toggle between light and dark themes
 - **Admin Panel**: Password-protected settings page
@@ -37,9 +37,10 @@ ADMIN_PASSWORD=your-secure-password-here
 # Optional: Set a default Gemini API key (can also be set via admin panel)
 GEMINI_API_KEY=your-gemini-api-key
 
-# Optional: Set Google Cloud API key for high-quality male voice output
+# Optional: Set Camb.AI API key for high-quality male voice output
+# Get your free API key at https://studio.camb.ai/
 # If not set, falls back to browser's Web Speech API
-GOOGLE_CLOUD_API_KEY=your-google-cloud-api-key
+CAMB_AI_API_KEY=your-camb-ai-api-key
 ```
 
 ### 3. Run the Development Server
@@ -103,6 +104,15 @@ Access the admin panel at [http://localhost:3000/admin](http://localhost:3000/ad
 3. Click "Create API Key"
 4. Copy the key and add it to your admin panel or `.env.local`
 
+## 🔊 Getting a Camb.AI API Key
+
+1. Go to [Camb.AI Studio](https://studio.camb.ai/)
+2. Sign up for a free account
+3. Navigate to your account settings to find your API key
+4. Copy the key and add it to your `.env.local` as `CAMB_AI_API_KEY`
+
+Note: If the Camb.AI API key is not configured, the app will fall back to the browser's Web Speech API.
+
 ## 🌐 Deployment to Vercel
 
 ### 1. Push to GitHub
@@ -123,6 +133,7 @@ git push -u origin main
 3. Add environment variables:
    - `ADMIN_PASSWORD`: Your secure admin password
    - `GEMINI_API_KEY`: Your Gemini API key (optional, can be set via admin)
+   - `CAMB_AI_API_KEY`: Your Camb.AI API key for text-to-speech (optional)
 4. Deploy!
 
 ### Important Notes for Production:
