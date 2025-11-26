@@ -285,12 +285,12 @@ Why I'm interested in this role: [Your motivation]...
           <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
             <li>• Include your work experience, projects, and achievements</li>
             <li>
-              • Add answers to common interview questions (e.g., "Tell me about
-              yourself")
+              • Add answers to common interview questions (e.g., &quot;Tell me about
+              yourself&quot;)
             </li>
             <li>• Mention your technical skills and certifications</li>
             <li>
-              • Include your career goals and why you're interested in the role
+              • Include your career goals and why you&apos;re interested in the role
             </li>
             <li>• The more detailed your profile, the better the responses</li>
           </ul>

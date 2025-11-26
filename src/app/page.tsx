@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { MicrophoneButton } from "@/components/MicrophoneButton";
 import { ChatBubble } from "@/components/ChatBubble";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useAudioRecorder } from "@/hooks/useAudioRecorder";
+import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 import { useSpeechSynthesis } from "@/hooks/useSpeechSynthesis";
 
 interface Message {
