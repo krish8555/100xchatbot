@@ -20,12 +20,12 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
   const startRecording = useCallback(async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
+
       // Use webm format which is widely supported
       const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
+        mimeType: "audio/webm;codecs=opus",
       });
-      
+
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
 
@@ -46,7 +46,10 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
 
   const stopRecording = useCallback(async (): Promise<Blob | null> => {
     return new Promise((resolve) => {
-      if (!mediaRecorderRef.current || mediaRecorderRef.current.state === "inactive") {
+      if (
+        !mediaRecorderRef.current ||
+        mediaRecorderRef.current.state === "inactive"
+      ) {
         setIsRecording(false);
         resolve(null);
         return;
@@ -56,10 +59,12 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
         const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         setAudioBlob(blob);
         setIsRecording(false);
-        
+
         // Stop all tracks
-        mediaRecorderRef.current?.stream.getTracks().forEach(track => track.stop());
-        
+        mediaRecorderRef.current?.stream
+          .getTracks()
+          .forEach((track) => track.stop());
+
         resolve(blob);
       };
 

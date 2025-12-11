@@ -4,31 +4,11 @@ import { getSettings } from "@/lib/settings";
 
 export async function POST(request: NextRequest) {
   try {
-    const contentType = request.headers.get("content-type") || "";
-    
-    let message: string = "";
-    let audioData: string | null = null;
-    let audioMimeType: string | null = null;
+    const { message } = await request.json();
 
-    // Check if it's a multipart form (audio) or JSON (text)
-    if (contentType.includes("multipart/form-data")) {
-      const formData = await request.formData();
-      const audioFile = formData.get("audio") as File | null;
-      message = formData.get("message") as string || "";
-      
-      if (audioFile) {
-        const arrayBuffer = await audioFile.arrayBuffer();
-        audioData = Buffer.from(arrayBuffer).toString("base64");
-        audioMimeType = audioFile.type || "audio/webm";
-      }
-    } else {
-      const json = await request.json();
-      message = json.message;
-    }
-
-    if (!message && !audioData) {
+    if (!message) {
       return NextResponse.json(
-        { error: "Message or audio is required" },
+        { error: "Message is required" },
         { status: 400 }
       );
     }
@@ -52,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     // Initialize Gemini
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
     // Build the system prompt
     const systemPrompt = `SYSTEM INSTRUCTIONS:
@@ -81,25 +61,6 @@ STRICT RULES:
 - Highlight relevant skills, experiences, and achievements when appropriate.
 - Be honest and authentic in your responses.`;
 
-    // Build the message parts
-    const messageParts: Array<{ text: string } | { inlineData: { mimeType: string; data: string } }> = [];
-    
-    // Add audio if present
-    if (audioData && audioMimeType) {
-      messageParts.push({
-        inlineData: {
-          mimeType: audioMimeType,
-          data: audioData,
-        },
-      });
-      // Add instruction to process the audio
-      messageParts.push({
-        text: message || "Please listen to this audio and respond to what was said.",
-      });
-    } else {
-      messageParts.push({ text: message });
-    }
-
     // Create the chat
     const chat = model.startChat({
       history: [
@@ -118,16 +79,28 @@ STRICT RULES:
       ],
     });
 
-    // Send the message (with audio if present)
-    const result = await chat.sendMessage(messageParts);
+    // Send the message
+    const result = await chat.sendMessage(message);
     const response = result.response.text();
 
     return NextResponse.json({ response });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error in /api/ask:", error);
+
+    // Return detailed error information
+    const errorMessage =
+      error instanceof Error
+        ? error.message
+        : "Failed to process your request. Please try again.";
+    const errorStatus = (error as { status?: number })?.status || 500;
+
     return NextResponse.json(
-      { error: "Failed to process your request. Please try again." },
-      { status: 500 }
+      {
+        error: errorMessage,
+        details: String(error),
+        status: errorStatus,
+      },
+      { status: errorStatus }
     );
   }
 }
